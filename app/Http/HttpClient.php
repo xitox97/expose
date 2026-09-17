@@ -100,6 +100,8 @@ class HttpClient
             $uri = $uri->withScheme('https');
         }
 
+        $request = $request->withHeader('Host', $uri->getAuthority());
+
         return (new Browser($this->loop, $this->createConnector()))
             ->withFollowRedirects(false)
             ->withRejectErrorResponse(false)
@@ -179,12 +181,14 @@ class HttpClient
 
         $location = $response->getHeaderLine('Location');
 
-        if (! strstr($location, $this->connectionData->host)) {
+        $host = preg_replace('/:443$/', '', $this->connectionData->host);
+
+        if (! strstr($location, $host)) {
             return $response;
         }
 
         $location = str_replace(
-            $this->connectionData->host,
+            $host,
             $this->configuration->getUrl($this->connectionData->subdomain),
             $location
         );
